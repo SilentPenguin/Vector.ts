@@ -2,7 +2,7 @@
 
 Vector.ts is a completely different approach to vector mathematics.
 
-Many other ways of handling vector mathematics can result in unintuative behaviours due to call order. Chaining syntax such as `v1.add(v2).divide(v3)` actually means `(v1 + v2) / v3` rather than `v1 + (v2 / v3)`.
+Many other ways of handling vector mathematics can result in unintuative behaviours due to call order. Chaining syntax such as `v1.subtract(v2).divide(v3)` actually means `(v1 - v2) / v3` rather than the expectation `v1 - (v2 / v3)`. Instead, the syntax `v1.subtract(v2.divide(v3))` is required.
 
 ## What Do Vector Calculations Look Like?
 
