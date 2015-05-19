@@ -13,7 +13,7 @@ var v1: number[] = [2, 1, 4],
     v2: number[] = [3, 6, 5],
     v3: number[] = [8, 7, 9];
     
-Vector.from(v1, v2, v3).to((v1, v2, v3) => (v1 + v2) / v3); //produces [0.625, 1, 1]
+Vector.from(v1).with(v2).with(v3).as((v1, v2, v3) => (v1 + v2) / v3); //produces [0.625, 1, 1]
 ```
 
 The function is applied to the vectors in an element wise fashion, `(v1, v2, v3) => (v1 + v2) / v3` will first be called as `(2, 3, 8) => 2 + 3 / 8`.
