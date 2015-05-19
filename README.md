@@ -31,9 +31,14 @@ Vector.ts gives you the power to write your own expressions, then looks to addre
 var v1: number[] = [2, 1, 4],
     v2: number[] = [3, 6, 5],
     v3: number[] = [8, 7, 9];
-Vector.from(v1).to(v3); //returns [6, 6, 5], v3 - v1
-Vector.from(v1).add(v2); //returns [5, 7, 9], ie, v1 + v2
-Vector.from(v1).size.by(2); //returns [4, 2, 8], ie V1 * 2
-Vector.from(v1).project.along(v2); //returns a vector projection of v1 onto v2
-Vector.from(v1).project.plane(v2); //returns a vector rejection of v1 onto v2
+//returns a vector to move between two positions, [6, 6, 5], v3 - v1
+Vector.from(v1).to(v3);
+//returns a new position based on moving by v2, [5, 7, 9], ie, v1 + v2
+Vector.from(v1).add(v2);
+//returns a vector twice the size of the original, [4, 2, 8], ie V1 * 2
+Vector.from(v1).size.by(2);
+//returns a vector projection of v1 onto v2, the result will point along v2
+Vector.from(v1).project.along(v2);
+//returns a vector rejection of v1 onto v2, the result will be orthogonal to v2
+Vector.from(v1).project.plane(v2);
 ```
