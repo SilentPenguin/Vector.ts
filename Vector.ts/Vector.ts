@@ -41,46 +41,23 @@
 
     Collection.prototype = new Array;
 
+    export function from(x: number, y: number, ...rest: number[]): IVector;
+    export function from(vector: IArray): IVector;
+    export function from(...rest: any[]): IVector {
+        return new Vector(rest.length == 1 ? rest[0] : rest);
+    }
+
     class Vector extends Collection<number> implements IVector {
-        get x(): number {
-            return this[0];
-        }
-        get y(): number {
-            return this[1];
-        }
-        get z(): number {
-            return this[2];
-        }
-        get w(): number {
-            return this[3];
-        }
-        set x(val: number) {
-            this[0] = val;
-        }
-        set y(val: number) {
-            this[1] = val;
-        }
-        set z(val: number) {
-            this[2] = val;
-        }
-        set w(val: number) {
-            this[3] = val;
-        }
+        get x(): number { return this[0]; }
+        get y(): number { return this[1]; }
+        get z(): number { return this[2]; }
+        get w(): number { return this[3]; }
+        set x(val: number) { this[0] = val; }
+        set y(val: number) { this[1] = val; }
+        set z(val: number) { this[2] = val; }
+        set w(val: number) { this[3] = val; }
 
-        get size(): number {
-            return Math.sqrt(from(this, this).dot());
-        }
-
-        get unit(): IVector {
-            var size = this.size;
-            return this.to(v => v / size);
-        }
-
-        get inverse(): IVector {
-            return this.to(v => v * -1);
-        }
-
-        to(func: IFunction): IVector {
+        as(func: IFunction): IVector {
             var result: IVector = new Vector;
 
             for (var i: number = 0; i < this.length; i++) {
@@ -90,23 +67,82 @@
             result.length = this.length;
             return result;
         }
+
+        add(vector: IArray): IVector {
+            return this.with(vector).as((v1, v2) => v1 + v2);
+        }
+
+        to(vector: IArray): IVector {
+            return this.with(vector).as((v1, v2) => v2 - v1);
+        }
+
+        with(vector: IArray): IVectorContainer {
+            return new VectorContainer(this, vector);
+        }
+
+        inverse(): IVector {
+            return this.as(a => a * -1);
+        }
+
+        unit(): IVector {
+            return this.size.of(1);
+        }
+
+        cross: ICross = Cross.call(this);
+        dot: IDot = Dot.call(this);
+        size: ISize = Size.call(this);
+        project: IProject = Project.call(this);
     }
 
-    export function from(vector: IArray): IVector;
-    export function from(x: number, y: number, ...rest: number[]): IVector;
-    export function from(v1: IArray, v2: IArray): IPairOperators;
-    export function from(v1: IArray, v2: IArray, ...rest: IArray[]): IVectorOperators;
-    export function from(...rest: any[]): any {
-        return rest[0] instanceof Array && rest.length > 1 ? new VectorCollection(rest) : new Vector(rest.length == 1 ? rest[0] : rest);
+    function Dot(): IDot {
+        return {
+            with: (vector: IArray): number => {
+                return this.with(vector).as((a, b) => a * b).reduce((a, b) => a + b);
+            }
+        }
     }
 
-    class VectorCollection implements IVectorOperators, IPairOperators {
+    function Cross(): ICross {
+        return {
+            with: (vector: IArray): IVector => {
+                return from(
+                    this[1] * vector[2] - this[2] * vector[1],
+                    this[2] * vector[0] - this[0] * vector[2],
+                    this[0] * vector[1] - this[1] * vector[0]
+                );
+            }
+        }
+    }
+
+    function Size(): ISize {
+        var object: any = (): number => { return Math.sqrt(this.dot.with(this)); }
+        object.of = (length: number): IVector => {
+            var ratio = length / this.size();
+            return this.as(a => a * ratio);
+        }
+        return object;
+    }
+
+    function Project(): IProject {
+        return {
+            along: (vector: IArray): IVector => {
+                var unit = from(vector).unit();
+                return unit.size.of(this.dot.with(unit));
+            },
+            plane: (vector: IArray): IVector => {
+                return this.project.along(vector).to(this);
+            }
+        }
+    }
+
+    class VectorContainer implements IVectorContainer {
         vectors: IArray[];
-        constructor(vectors: IArray[]) {
+
+        constructor(...vectors: IArray[]) {
             this.vectors = vectors;
         }
 
-        to(func: IFunction): IVector {
+        as(func: IFunction): IVector {
             var result: IVector = new Vector,
                 call: number[],
                 total: number = 0;
@@ -125,20 +161,9 @@
             return result;
         }
 
-        dot(): number {
-            return this.to((a, b) => a * b).reduce((a, b) => a + b);
-        }
-
-        cross(): IVector {
-            return from(
-                this.vectors[0][1] * this.vectors[1][2] - this.vectors[0][2] * this.vectors[1][1],
-                this.vectors[0][2] * this.vectors[1][0] - this.vectors[0][0] * this.vectors[1][2],
-                this.vectors[0][0] * this.vectors[1][1] - this.vectors[0][1] * this.vectors[1][0]
-            );
-        }
-
-        distance(): number {
-            return this.to((v1, v2) => v1 - v2).size;
+        with(vector: IArray): IVectorContainer {
+            this.vectors.push(vector);
+            return this;
         }
     }
 
@@ -152,22 +177,66 @@
 
     interface IArray extends Array<number> { }
 
-    interface IVectorOperators {
-        to: (func: IFunction) => IVector;
-    }
-
-    export interface IVector extends IArray, IVectorOperators {
+    export interface IVector extends IArray {
         x: number;
         y: number;
         z: number;
-        inverse: IVector;
-        size: number;
-        unit: IVector;
+        as: IAs;
+        add: IAdd;
+        to: ITo;
+        with: IWith;
+        cross: ICross;
+        dot: IDot;
+        size: ISize;
+        unit: IUnit;
+        inverse: IInverse;
+        project: IProject;
     }
 
-    interface IPairOperators extends IVectorOperators {
-        dot: () => number;
-        cross: () => IVector;
-        distance: () => number;
+    interface IVectorContainer {
+        as: IAs;
+        with: IWith;
+    }
+
+    interface IAs {
+        (func: IFunction): IVector;
+    }
+
+    interface IAdd {
+        (v: IArray): IVector;
+    }
+
+    interface ITo {
+        (v: IArray): IVector;
+    }
+
+    interface IWith {
+        (v: IArray): IVectorContainer;
+    }
+
+    interface IDot {
+        with: (v: IArray) => number;
+    }
+
+    interface ICross {
+        with: (v: IArray) => IVector;
+    }
+
+    interface ISize {
+        (): number;
+        of: (length: number) => IVector;
+    }
+
+    interface IUnit {
+        (): IVector;
+    }
+
+    interface IInverse {
+        (): IVector;
+    }
+
+    interface IProject {
+        along: (vector: IArray) => IVector;
+        plane: (vector: IArray) => IVector;
     }
 }
