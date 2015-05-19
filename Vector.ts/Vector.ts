@@ -91,16 +91,19 @@
         inverse(): IVector { return this.as(a => a * -1); }
         unit(): IVector { return this.size.of(1); }
 
+        angle: IAngle = Angle.call(this);
         cross: ICross = Cross.call(this);
         dot: IDot = Dot.call(this);
+        reflect: IReflect = Reflect.call(this);
         size: ISize = Size.call(this);
         project: IProject = Project.call(this);
     }
 
-    function Dot(): IDot {
+    function Angle(): IAngle {
         return {
             with: (...rest: any[]): number => {
-                return this.with(rest.length == 1 ? rest[0] : rest).as((a, b) => a * b).reduce((a, b) => a + b);
+                var vector = from(rest.length == 1 ? rest[0] : rest);
+                return this.dot.with(vector) / (this.size() * vector.size());
             }
         }
     }
@@ -114,6 +117,36 @@
                     this[2] * vector[0] - this[0] * vector[2],
                     this[0] * vector[1] - this[1] * vector[0]
                 );
+            }
+        }
+    }
+
+    function Dot(): IDot {
+        return {
+            with: (...rest: any[]): number => {
+                return this.with(rest.length == 1 ? rest[0] : rest).as((a, b) => a * b).reduce((a, b) => a + b);
+            }
+        }
+    }
+
+    function Project(): IProject {
+        return {
+            along: (...rest: any[]): IVector => {
+                var unit = from(rest.length == 1 ? rest[0] : rest).unit();
+                return unit.size.of(this.dot.with(unit));
+            },
+            plane: (...rest: any[]): IVector => {
+                return this.project.along(rest.length == 1 ? rest[0] : rest).to(this);
+            }
+        }
+    }
+
+    function Reflect(): IReflect {
+        return {
+            across: (...rest: any[]): IVector => {
+                var vector = from(rest.length == 1 ? rest[0] : rest).unit();
+                vector = vector.size.of(2 * vector.dot.with(this));
+                return vector.to(this);
             }
         }
     }
@@ -136,18 +169,6 @@
             }
         }
         return object;
-    }
-
-    function Project(): IProject {
-        return {
-            along: (...rest: any[]): IVector => {
-                var unit = from(rest.length == 1 ? rest[0] : rest).unit();
-                return unit.size.of(this.dot.with(unit));
-            },
-            plane: (...rest: any[]): IVector => {
-                return this.project.along(rest.length == 1 ? rest[0] : rest).to(this);
-            }
-        }
     }
 
     class VectorContainer implements IVectorContainer {
@@ -198,16 +219,18 @@
         x: number;
         y: number;
         z: number;
-        as: IAs;
         add: IAdd;
-        to: ITo;
-        with: IWith<IVectorContainer>;
+        angle: IAngle;
+        as: IAs;
         cross: ICross;
         dot: IDot;
-        size: ISize;
-        unit: IUnit;
         inverse: IInverse;
         project: IProject;
+        reflect: IReflect;
+        to: ITo;
+        size: ISize;
+        unit: IUnit;
+        with: IWith<IVectorContainer>;
     }
 
     interface IVectorContainer {
@@ -224,22 +247,29 @@
         (v: IArray): IVector;
     }
 
-    interface ITo {
-        (x: number, y: number, ...rest: number[]): IVector;
-        (v: IArray): IVector;
+    interface IAngle {
+        with: IWith<number>;
     }
 
-    interface IWith<T> {
-        (x: number, y: number, ...rest: number[]): T;
-        (v: IArray): T;
+    interface ICross {
+        with: IWith<IVector>;
     }
 
     interface IDot {
         with: IWith<number>;
     }
 
-    interface ICross {
-        with: IWith<IVector>;
+    interface IInverse {
+        (): IVector;
+    }
+
+    interface IReflect {
+        across: IWith<IVector>;
+    }
+
+    interface IProject {
+        along: IWith<IVector>;
+        plane: IWith<IVector>;
     }
 
     interface ISize {
@@ -254,16 +284,17 @@
         least: (length: number) => IVector;
     }
 
+    interface ITo {
+        (x: number, y: number, ...rest: number[]): IVector;
+        (v: IArray): IVector;
+    }
+
     interface IUnit {
         (): IVector;
     }
 
-    interface IInverse {
-        (): IVector;
-    }
-
-    interface IProject {
-        along: IWith<IVector>;
-        plane: IWith<IVector>;
+    interface IWith<T> {
+        (x: number, y: number, ...rest: number[]): T;
+        (v: IArray): T;
     }
 }
