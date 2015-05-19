@@ -3,6 +3,8 @@
      * implementation *
      *----------------*/
 
+    export var precision = 1e-6;
+
     class Collection<T> implements Array<T>
     {
         constructor(vector?: Array<T>) {
@@ -86,13 +88,8 @@
             return new VectorContainer(this, rest.length == 1 ? rest[0] : rest);
         }
 
-        inverse(): IVector {
-            return this.as(a => a * -1);
-        }
-
-        unit(): IVector {
-            return this.size.of(1);
-        }
+        inverse(): IVector { return this.as(a => a * -1); }
+        unit(): IVector { return this.size.of(1); }
 
         cross: ICross = Cross.call(this);
         dot: IDot = Dot.call(this);
@@ -129,6 +126,14 @@
         }
         object.by = (factor: number): IVector => {
             return this.as(a => a * factor);
+        }
+        object.at = {
+            most: (length: number): IVector => {
+                return this.size() <= length ? this : this.size.of(length);
+            },
+            least: (length: number): IVector => {
+                return this.size() >= length ? this : this.size.of(length);
+            }
         }
         return object;
     }
@@ -241,6 +246,12 @@
         (): number;
         of: (length: number) => IVector;
         by: (factor: number) => IVector;
+        at: ISizeAt;
+    }
+
+    interface ISizeAt {
+        most: (length: number) => IVector;
+        least: (length: number) => IVector;
     }
 
     interface IUnit {
