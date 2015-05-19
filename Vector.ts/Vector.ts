@@ -94,9 +94,10 @@
         angle: IAngle = Angle.call(this);
         cross: ICross = Cross.call(this);
         dot: IDot = Dot.call(this);
+        interpolate: IInterpolate = Interpolate.call(this);
+        project: IProject = Project.call(this);
         reflect: IReflect = Reflect.call(this);
         size: ISize = Size.call(this);
-        project: IProject = Project.call(this);
     }
 
     function Angle(): IAngle {
@@ -125,6 +126,14 @@
         return {
             with: (...rest: any[]): number => {
                 return this.with(rest.length == 1 ? rest[0] : rest).as((a, b) => a * b).reduce((a, b) => a + b);
+            }
+        }
+    }
+
+    function Interpolate(): IInterpolate {
+        return {
+            to: (...rest: any[]): IInterpolation => {
+                return new Interpolation(this, from(rest.length == 1 ? rest[0] : rest));
             }
         }
     }
@@ -169,6 +178,40 @@
             }
         }
         return object;
+    }
+
+    class Interpolation implements IInterpolation {
+        startV: IVector;
+        endV: IVector;
+        startT: number;
+        endT: number;
+        constructor(start: IVector, end: IVector) {
+            this.startV = start;
+            this.endV = end;
+            this.startT = 0;
+            this.endT = 1;
+        }
+        at(time: number): IVector {
+            time = (time - this.startT) / (this.endT - this.startT);
+            return this.startV.with(this.endV).as((v1, v2) => time * v1 + (1 - time) * v2);
+        }
+        by(delta: number): IVector {
+            var move = this.startV.to(this.endV);
+            move = move.size.of(delta).size.at.most(move.size());
+            return this.startV.add(move);
+        }
+        start(time: number): IInterpolation {
+            this.startT = time;
+            return this;
+        }
+        end(time: number): IInterpolation {
+            this.endT = time;
+            return this;
+        }
+        take(delta: number): IInterpolation {
+            this.endT = this.startT + delta;
+            return this;
+        }
     }
 
     class VectorContainer implements IVectorContainer {
@@ -224,6 +267,7 @@
         as: IAs;
         cross: ICross;
         dot: IDot;
+        interpolate: IInterpolate;
         inverse: IInverse;
         project: IProject;
         reflect: IReflect;
@@ -257,6 +301,18 @@
 
     interface IDot {
         with: IWith<number>;
+    }
+
+    interface IInterpolate {
+        to: IWith<IInterpolation>;
+    }
+
+    interface IInterpolation {
+        at: (time: number) => IVector;
+        start: (time: number) => IInterpolation;
+        end: (time: number) => IInterpolation;
+        take: (delta: number) => IInterpolation;
+        by: (delta: number) => IVector;
     }
 
     interface IInverse {
