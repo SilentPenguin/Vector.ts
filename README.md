@@ -31,6 +31,7 @@ Vector.ts gives you the power to write your own expressions, then looks to addre
 var v1: number[] = [2, 1, 4],
     v2: number[] = [3, 6, 5],
     v3: number[] = [8, 7, 9];
+    
 //returns a vector to move between two positions, [6, 6, 5], v3 - v1
 Vector.from(v1).to(v3);
 //returns a new position based on moving by v2, [5, 7, 9], ie, v1 + v2
