@@ -68,16 +68,22 @@
             return result;
         }
 
-        add(vector: IArray): IVector {
-            return this.with(vector).as((v1, v2) => v1 + v2);
+        add(x: number, y: number, ...rest: number[]): IVector;
+        add(vector: IArray): IVector;
+        add(...rest: any[]): IVector {
+            return this.with(rest.length == 1 ? rest[0] : rest).as((v1, v2) => v1 + v2);
         }
 
-        to(vector: IArray): IVector {
-            return this.with(vector).as((v1, v2) => v2 - v1);
+        to(x: number, y: number, ...rest: number[]): IVector;
+        to(vector: IArray): IVector;
+        to(...rest: any[]): IVector {
+            return this.with(rest.length == 1 ? rest[0] : rest).as((v1, v2) => v2 - v1);
         }
 
-        with(vector: IArray): IVectorContainer {
-            return new VectorContainer(this, vector);
+        with(x: number, y: number, ...rest: number[]): IVectorContainer;
+        with(vector: IArray): IVectorContainer;
+        with(...rest: any[]): IVectorContainer {
+            return new VectorContainer(this, rest.length == 1 ? rest[0] : rest);
         }
 
         inverse(): IVector {
@@ -96,15 +102,16 @@
 
     function Dot(): IDot {
         return {
-            with: (vector: IArray): number => {
-                return this.with(vector).as((a, b) => a * b).reduce((a, b) => a + b);
+            with: (...rest: any[]): number => {
+                return this.with(rest.length == 1 ? rest[0] : rest).as((a, b) => a * b).reduce((a, b) => a + b);
             }
         }
     }
 
     function Cross(): ICross {
         return {
-            with: (vector: IArray): IVector => {
+            with: (...rest: any[]): IVector => {
+                var vector = rest.length == 1 ? rest[0] : rest;
                 return from(
                     this[1] * vector[2] - this[2] * vector[1],
                     this[2] * vector[0] - this[0] * vector[2],
@@ -161,8 +168,10 @@
             return result;
         }
 
-        with(vector: IArray): IVectorContainer {
-            this.vectors.push(vector);
+        with(x: number, y: number, ...rest: number[]): IVectorContainer;
+        with(vector: IArray): IVectorContainer;
+        with(...rest: any[]): IVectorContainer {
+            this.vectors.push(rest.length == 1 ? rest[1] : rest);
             return this;
         }
     }
@@ -184,7 +193,7 @@
         as: IAs;
         add: IAdd;
         to: ITo;
-        with: IWith;
+        with: IWith<IVectorContainer>;
         cross: ICross;
         dot: IDot;
         size: ISize;
@@ -195,7 +204,7 @@
 
     interface IVectorContainer {
         as: IAs;
-        with: IWith;
+        with: IWith<IVectorContainer>;
     }
 
     interface IAs {
@@ -203,23 +212,26 @@
     }
 
     interface IAdd {
+        (x: number, y: number, ...rest: number[]): IVector;
         (v: IArray): IVector;
     }
 
     interface ITo {
+        (x: number, y: number, ...rest: number[]): IVector;
         (v: IArray): IVector;
     }
 
-    interface IWith {
-        (v: IArray): IVectorContainer;
+    interface IWith<T> {
+        (x: number, y: number, ...rest: number[]): T;
+        (v: IArray): T;
     }
 
     interface IDot {
-        with: (v: IArray) => number;
+        with: IWith<number>;
     }
 
     interface ICross {
-        with: (v: IArray) => IVector;
+        with: IWith<IVector>;
     }
 
     interface ISize {
