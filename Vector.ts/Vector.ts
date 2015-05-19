@@ -127,6 +127,9 @@
             var ratio = length / this.size();
             return this.as(a => a * ratio);
         }
+        object.by = (length: number): IVector => {
+            return this.as(a => a * length);
+        }
         return object;
     }
 
@@ -237,6 +240,7 @@
     interface ISize {
         (): number;
         of: (length: number) => IVector;
+        by: (length: number) => IVector;
     }
 
     interface IUnit {
