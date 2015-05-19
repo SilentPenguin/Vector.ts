@@ -127,20 +127,20 @@
             var ratio = length / this.size();
             return this.as(a => a * ratio);
         }
-        object.by = (length: number): IVector => {
-            return this.as(a => a * length);
+        object.by = (factor: number): IVector => {
+            return this.as(a => a * factor);
         }
         return object;
     }
 
     function Project(): IProject {
         return {
-            along: (vector: IArray): IVector => {
-                var unit = from(vector).unit();
+            along: (...rest: any[]): IVector => {
+                var unit = from(rest.length == 1 ? rest[0] : rest).unit();
                 return unit.size.of(this.dot.with(unit));
             },
-            plane: (vector: IArray): IVector => {
-                return this.project.along(vector).to(this);
+            plane: (...rest: any[]): IVector => {
+                return this.project.along(rest.length == 1 ? rest[0] : rest).to(this);
             }
         }
     }
@@ -240,7 +240,7 @@
     interface ISize {
         (): number;
         of: (length: number) => IVector;
-        by: (length: number) => IVector;
+        by: (factor: number) => IVector;
     }
 
     interface IUnit {
@@ -252,7 +252,7 @@
     }
 
     interface IProject {
-        along: (vector: IArray) => IVector;
-        plane: (vector: IArray) => IVector;
+        along: IWith<IVector>;
+        plane: IWith<IVector>;
     }
 }
