@@ -17,6 +17,7 @@ var v1: number[] = [2, 1, 4],
 
 Vector.from(v1).to(v3); //returns [6, 6, 5], v3 - v1
 Vector.from(v1).add(v2); //returns [5, 7, 9], ie, v1 + v2
+Vector.from(v1).size.factor(2); //returns [4, 2, 8], ie V1 * 2
 Vector.from(v1).with(v2).with(v3).as((v1, v2, v3) => (v1 + v2) / v3); //produces [0.625, 1, 1]
 ```
 
